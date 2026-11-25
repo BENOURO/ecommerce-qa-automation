@@ -1,7 +1,8 @@
-import { test as base, expect, type Page } from '@playwright/test';
+import { test as base, expect, type APIRequestContext, type Page } from '@playwright/test';
 import { closePool } from '../database/connection';
 import { deleteUserAndOrders, findUserByEmail } from '../database/queries';
 import { HeaderComponent } from '../pages/HeaderComponent';
+import { CartPage } from '../pages/CartPage';
 import { LoginPage } from '../pages/LoginPage';
 import { ProductDetailPage } from '../pages/ProductDetailPage';
 import { ProductsPage } from '../pages/ProductsPage';
@@ -21,6 +22,9 @@ interface TestFixtures {
   header: HeaderComponent;
   productsPage: ProductsPage;
   productDetailPage: ProductDetailPage;
+  cartPage: CartPage;
+  /** An API client already logged in as `testUser` (its cookie jar keeps the session). */
+  authenticatedRequest: APIRequestContext;
   /** For tests that create users themselves: register the email here and it is deleted after the test. */
   trackUser: (email: string) => void;
 }
@@ -69,6 +73,18 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
 
   productDetailPage: async ({ page }, use) => {
     await use(new ProductDetailPage(page));
+  },
+
+  cartPage: async ({ page }, use) => {
+    await use(new CartPage(page));
+  },
+
+  authenticatedRequest: async ({ request, testUser }, use) => {
+    const response = await request.post('/api/auth/login', {
+      data: { email: testUser.email, password: testUser.password },
+    });
+    expect(response.status(), 'logging in the API client should succeed').toBe(200);
+    await use(request);
   },
 
   trackUser: async ({}, use) => {

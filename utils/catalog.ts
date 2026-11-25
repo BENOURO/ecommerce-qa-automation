@@ -9,6 +9,23 @@ export type Category = SeedProduct['category'];
 
 export const allProducts = (): SeedProduct[] => [...seedProducts];
 
+export function productBySku(sku: string): SeedProduct {
+  const product = seedProducts.find((p) => p.sku === sku);
+  if (!product) throw new Error(`No seeded product with SKU ${sku}`);
+  return product;
+}
+
+/**
+ * RESERVED for stock-limit tests (cart limits): no other test may BUY this product,
+ * because buying lowers its stock and would make the limit tests unpredictable in parallel runs.
+ */
+export const LIMITED_STOCK_SKU = 'CLTH-004'; // Wool Beanie, stock 5
+
+/** Sum of price x quantity, computed from the seed data: the expected cart total in cents. */
+export function expectedTotalCents(lines: ReadonlyArray<{ sku: string; quantity: number }>): number {
+  return lines.reduce((sum, line) => sum + productBySku(line.sku).priceCents * line.quantity, 0);
+}
+
 export const inCategory = (category: Category): SeedProduct[] =>
   seedProducts.filter((p) => p.category === category);
 
