@@ -3,6 +3,8 @@ import { closePool } from '../database/connection';
 import { deleteUserAndOrders, findUserByEmail } from '../database/queries';
 import { HeaderComponent } from '../pages/HeaderComponent';
 import { LoginPage } from '../pages/LoginPage';
+import { ProductDetailPage } from '../pages/ProductDetailPage';
+import { ProductsPage } from '../pages/ProductsPage';
 import { buildNewUser, type NewUser } from '../utils/test-data';
 
 export interface TestUser extends NewUser {
@@ -17,6 +19,8 @@ interface TestFixtures {
   /** Page objects, created for the test's page. */
   loginPage: LoginPage;
   header: HeaderComponent;
+  productsPage: ProductsPage;
+  productDetailPage: ProductDetailPage;
   /** For tests that create users themselves: register the email here and it is deleted after the test. */
   trackUser: (email: string) => void;
 }
@@ -57,6 +61,14 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
 
   header: async ({ page }, use) => {
     await use(new HeaderComponent(page));
+  },
+
+  productsPage: async ({ page }, use) => {
+    await use(new ProductsPage(page));
+  },
+
+  productDetailPage: async ({ page }, use) => {
+    await use(new ProductDetailPage(page));
   },
 
   trackUser: async ({}, use) => {
