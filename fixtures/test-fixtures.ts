@@ -3,6 +3,8 @@ import { closePool } from '../database/connection';
 import { deleteUserAndOrders, findUserByEmail } from '../database/queries';
 import { HeaderComponent } from '../pages/HeaderComponent';
 import { CartPage } from '../pages/CartPage';
+import { CheckoutPage } from '../pages/CheckoutPage';
+import { ConfirmationPage } from '../pages/ConfirmationPage';
 import { LoginPage } from '../pages/LoginPage';
 import { ProductDetailPage } from '../pages/ProductDetailPage';
 import { ProductsPage } from '../pages/ProductsPage';
@@ -23,6 +25,8 @@ interface TestFixtures {
   productsPage: ProductsPage;
   productDetailPage: ProductDetailPage;
   cartPage: CartPage;
+  checkoutPage: CheckoutPage;
+  confirmationPage: ConfirmationPage;
   /** An API client already logged in as `testUser` (its cookie jar keeps the session). */
   authenticatedRequest: APIRequestContext;
   /** For tests that create users themselves: register the email here and it is deleted after the test. */
@@ -77,6 +81,14 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
 
   cartPage: async ({ page }, use) => {
     await use(new CartPage(page));
+  },
+
+  checkoutPage: async ({ page }, use) => {
+    await use(new CheckoutPage(page));
+  },
+
+  confirmationPage: async ({ page }, use) => {
+    await use(new ConfirmationPage(page));
   },
 
   authenticatedRequest: async ({ request, testUser }, use) => {

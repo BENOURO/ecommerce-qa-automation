@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, type NextFunction, type Request, type Response } from 'express';
 import { getPool, query } from '../../database/connection';
 import { HttpError, bodyOf, isEmail, isNonEmptyString, parseId } from '../http';
 import { requireAuth } from '../sessions';
@@ -63,9 +63,32 @@ function validateShipping(shipping: Record<string, unknown>): Record<string, str
   return errors;
 }
 
-ordersRouter.post('/', async (req, res) => {
+/**
+ * A customer can only have one order being placed at a time. Without this, sending the same order
+ * twice at once (a double click) would read the same cart twice and create two orders.
+ */
+const ordersInProgress = new Set<number>();
+
+function oneOrderAtATime(req: Request, res: Response, next: NextFunction): void {
   const userId = req.user!.id;
-  const shipping = bodyOf(bodyOf(req.body).shipping);
+  if (ordersInProgress.has(userId)) {
+    res.status(409).json({ error: 'An order is already being placed' });
+    return;
+  }
+  ordersInProgress.add(userId);
+  res.on('close', () => ordersInProgress.delete(userId)); // fires when the response is finished
+  next();
+}
+
+ordersRouter.post('/', oneOrderAtATime, async (req, res) => {
+  const userId = req.user!.id;
+  // Surrounding spaces are removed BEFORE validating, so " 22202 " is treated like "22202".
+  const shipping = Object.fromEntries(
+    Object.entries(bodyOf(bodyOf(req.body).shipping)).map(([key, value]) => [
+      key,
+      typeof value === 'string' ? value.trim() : value,
+    ]),
+  );
   const errors = validateShipping(shipping);
   if (Object.keys(errors).length > 0) throw new HttpError(400, 'Validation failed', errors);
 

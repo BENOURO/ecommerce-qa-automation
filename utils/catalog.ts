@@ -21,6 +21,13 @@ export function productBySku(sku: string): SeedProduct {
  */
 export const LIMITED_STOCK_SKU = 'CLTH-004'; // Wool Beanie, stock 5
 
+/**
+ * RESERVED for tests in tests/isolated/ that measure exact stock changes. Those tests run alone,
+ * after the parallel tests have finished, so a concurrent test never sees stock moving under it.
+ * Parallel tests may add it to a cart, but must not buy it.
+ */
+export const STOCK_TRACKING_SKU = 'CLTH-002'; // Denim Jacket, stock 15
+
 /** Sum of price x quantity, computed from the seed data: the expected cart total in cents. */
 export function expectedTotalCents(lines: ReadonlyArray<{ sku: string; quantity: number }>): number {
   return lines.reduce((sum, line) => sum + productBySku(line.sku).priceCents * line.quantity, 0);

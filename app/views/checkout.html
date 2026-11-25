@@ -44,6 +44,8 @@
       // Register the submit handler first so the form works as soon as it is visible.
       form.addEventListener('submit', async (event) => {
         event.preventDefault();
+        if (placeOrder.disabled) return; // an order is already being sent
+        placeOrder.disabled = true; // prevents a double click from sending two orders
         form.querySelectorAll('.error').forEach((el) => { el.textContent = ''; });
         const data = Object.fromEntries(new FormData(form).entries());
         const result = await api('POST', '/api/orders', { shipping: data });
@@ -51,6 +53,7 @@
           window.location.href = '/orders/' + result.data.order.id + '/confirmation';
           return;
         }
+        placeOrder.disabled = false; // let the customer fix the problem and try again
         if (result.status === 401) { window.location.href = '/login'; return; }
         const details = result.data?.details ?? {};
         for (const [field, text] of Object.entries(details)) {

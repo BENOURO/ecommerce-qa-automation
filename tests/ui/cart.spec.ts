@@ -264,9 +264,12 @@ test.describe('Shopping cart (UI)', () => {
   }) => {
     await addToCart(page.request, mouse.sku, 1);
     await cartPage.goto();
+    // Wait until the page has finished loading its data. Otherwise its own pending requests could
+    // receive the "expired" answer and redirect the page while the test is navigating.
+    await expect(cartPage.rows).toHaveCount(1);
     await page.request.post('/api/test/expire-session');
 
-    await page.reload();
+    await page.goto('/cart');
 
     await expect(page).toHaveURL(/\/login$/);
   });

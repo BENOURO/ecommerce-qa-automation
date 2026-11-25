@@ -23,7 +23,7 @@ Money is always integer cents (`priceCents`, `totalCents`, ...).
 
 | Method and path | Auth | Success | Errors |
 |---|---|---|---|
-| `GET /api/health` | none | 200 `{status}` | |
+| `GET /api/health` | none | 200 `{status: "ok"}` when the database answers | 503 `{status: "unavailable"}` when it does not |
 | `POST /api/auth/register` | none | 201 `{user}` | 400 validation, 409 duplicate email |
 | `POST /api/auth/login` | none | 200 `{user}` + `sid` cookie | 400 missing fields, 401 invalid credentials (same message for unknown email and wrong password) |
 | `POST /api/auth/logout` | any | 204, cookie cleared | |
@@ -35,6 +35,7 @@ Money is always integer cents (`priceCents`, `totalCents`, ...).
 | `PATCH /api/cart/items/:productId` `{quantity}` | session | 200 `{cart}` | 400, 401, 404 not in cart, 409 stock |
 | `DELETE /api/cart/items/:productId` | session | 200 `{cart}` | 400, 401, 404 not in cart |
 | `POST /api/orders` `{shipping:{name,email,address,city,postalCode}}` | session | 201 `{order}`; cart is emptied; stock decremented | 400 validation (`details` per field) or empty cart, 401, 409 insufficient stock |
+| (concurrency) | session | While one order from a customer is being placed, a second `POST /api/orders` from the same customer returns 409 `An order is already being placed` | |
 | `GET /api/orders` | session | 200 `{orders[]}` (own orders) | 401 |
 | `GET /api/orders/:id` | session | 200 `{order}` | 400, 401, 403 (another user's order, unless admin), 404 |
 | `GET /api/admin/users` | admin | 200 `{users[]}` | 401, 403 |
@@ -52,6 +53,7 @@ Cart and order items include the product `sku` so pages can show it.
 - Cart is per user and kept server-side: it survives page refresh and re-login (it is lost when the app restarts).
 - Order total = sum of (current product price x quantity), computed server-side. Item prices are copied to `order_items.unit_price_cents`.
 - Order creation is one transaction: order, items and stock decrement succeed or fail together.
+- Shipping text values are trimmed before validation and saved trimmed.
 - Postal code: 3-10 characters of letters, digits, spaces or hyphens.
 - Seed data: 12 products in 3 categories; `ELEC-004` and `BOOK-004` have no stock.
 

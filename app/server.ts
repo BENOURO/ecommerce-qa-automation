@@ -32,8 +32,15 @@ app.use(sessionMiddleware);
 app.use(express.static(resolve('app', 'public'))); // css and browser scripts only
 
 // ---- JSON API ----
-app.get('/api/health', (_req, res) => {
-  res.status(200).json({ status: 'ok' });
+// Readiness check: "ok" only when the database answers too. Playwright waits for this before
+// starting the tests, so the first test never pays for a cold database connection.
+app.get('/api/health', async (_req, res) => {
+  try {
+    await query('SELECT 1');
+    res.status(200).json({ status: 'ok' });
+  } catch {
+    res.status(503).json({ status: 'unavailable' });
+  }
 });
 app.use('/api/auth', authRouter);
 app.use('/api/products', productsRouter);

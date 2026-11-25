@@ -12,12 +12,13 @@ test.describe('Database smoke @smoke', () => {
 
     const row = await findProductBySku(mouse.sku);
 
+    // Stock is not compared: checkout tests running in parallel legitimately change it.
     expect(row).toMatchObject({
       name: mouse.name,
       category: mouse.category,
       price_cents: mouse.priceCents,
-      stock_quantity: mouse.stockQuantity,
     });
+    expect(row!.stock_quantity).toBeLessThanOrEqual(mouse.stockQuantity);
   });
 
   test('a user registered through the API is stored with a hashed password', async ({ testUser }) => {

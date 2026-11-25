@@ -17,6 +17,7 @@
     "test:ui": "playwright test --project=ui",
     "test:api": "playwright test --project=api",
     "test:db": "playwright test --project=database",
+    "test:isolated": "playwright test --project=isolated --no-deps",
     "report": "playwright show-report reports/html"
   },
   "keywords": [

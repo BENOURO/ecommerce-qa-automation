@@ -38,6 +38,9 @@ export default defineConfig({
     { name: 'ui', testDir: './tests/ui', use: { ...devices['Desktop Chrome'] } },
     { name: 'api', testDir: './tests/api' },
     { name: 'database', testDir: './tests/database' },
+    // Tests that measure exact stock numbers. They run last and alone: `dependencies` makes Playwright
+    // finish the three projects above first, so no parallel test changes stock under them.
+    { name: 'isolated', testDir: './tests/isolated', dependencies: ['ui', 'api', 'database'] },
   ],
 
   // Playwright starts the shop before the tests and stops it afterwards.

@@ -30,6 +30,28 @@ export async function findProductBySku(sku: string): Promise<ProductRow | undefi
   return rows[0];
 }
 
+export interface OrderRow {
+  id: number;
+  user_id: number;
+  status: string;
+  total_cents: number;
+  shipping_name: string;
+  shipping_email: string;
+  shipping_address: string;
+  shipping_city: string;
+  shipping_postal_code: string;
+  created_at: Date;
+}
+
+export async function countOrdersForUser(userId: number): Promise<number> {
+  const rows = await query<{ count: string }>('SELECT count(*) AS count FROM orders WHERE user_id = $1', [userId]);
+  return Number(rows[0]?.count ?? 0);
+}
+
+export async function listOrdersForUser(userId: number): Promise<OrderRow[]> {
+  return query<OrderRow>('SELECT * FROM orders WHERE user_id = $1 ORDER BY id', [userId]);
+}
+
 export async function countProducts(): Promise<number> {
   const rows = await query<{ count: string }>('SELECT count(*) AS count FROM products');
   return Number(rows[0]?.count ?? 0);
