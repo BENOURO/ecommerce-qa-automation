@@ -9,6 +9,10 @@ let pool: Pool | undefined;
 
 export function getPool(): Pool {
   if (!pool) {
+    // Safety guard: automated tests may only ever connect to a database that is named as a test database.
+    if (!env.db.name.endsWith('_test')) {
+      throw new Error(`Refusing to connect to "${env.db.name}": test databases must have a name ending in "_test".`);
+    }
     pool = new Pool({
       host: env.db.host,
       port: env.db.port,

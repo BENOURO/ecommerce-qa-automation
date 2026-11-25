@@ -52,6 +52,63 @@ export async function listOrdersForUser(userId: number): Promise<OrderRow[]> {
   return query<OrderRow>('SELECT * FROM orders WHERE user_id = $1 ORDER BY id', [userId]);
 }
 
+export interface OrderItemRow {
+  id: number;
+  order_id: number;
+  product_id: number;
+  quantity: number;
+  unit_price_cents: number;
+}
+
+export async function findUserById(id: number): Promise<UserRow | undefined> {
+  const rows = await query<UserRow>('SELECT * FROM users WHERE id = $1', [id]);
+  return rows[0];
+}
+
+export async function findOrderById(id: number): Promise<OrderRow | undefined> {
+  const rows = await query<OrderRow>('SELECT * FROM orders WHERE id = $1', [id]);
+  return rows[0];
+}
+
+export async function listOrderItems(orderId: number): Promise<OrderItemRow[]> {
+  return query<OrderItemRow>('SELECT * FROM order_items WHERE order_id = $1 ORDER BY product_id', [orderId]);
+}
+
+/** Total of an order computed by the database from its items: SUM(quantity x unit price). */
+export async function sumOfOrderItems(orderId: number): Promise<number> {
+  const rows = await query<{ total: number }>(
+    'SELECT COALESCE(SUM(quantity * unit_price_cents), 0)::int AS total FROM order_items WHERE order_id = $1',
+    [orderId],
+  );
+  return rows[0]?.total ?? 0;
+}
+
+/** Case-insensitive name search, the same rule the shop applies (wildcards in the term are literal). */
+export async function searchProductNames(term: string): Promise<string[]> {
+  const pattern = `%${term.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
+  const rows = await query<{ name: string }>('SELECT name FROM products WHERE name ILIKE $1 ORDER BY id', [pattern]);
+  return rows.map((r) => r.name);
+}
+
+export async function countProductsByCategory(): Promise<Record<string, number>> {
+  const rows = await query<{ category: string; count: number }>(
+    'SELECT category, count(*)::int AS count FROM products GROUP BY category',
+  );
+  return Object.fromEntries(rows.map((r) => [r.category, r.count]));
+}
+
+/** Order items whose order or product no longer exists. Healthy data returns 0. */
+export async function countOrphanOrderItems(): Promise<number> {
+  const rows = await query<{ count: number }>(
+    `SELECT count(*)::int AS count
+       FROM order_items oi
+       LEFT JOIN orders o ON o.id = oi.order_id
+       LEFT JOIN products p ON p.id = oi.product_id
+      WHERE o.id IS NULL OR p.id IS NULL`,
+  );
+  return rows[0]?.count ?? 0;
+}
+
 export async function countProducts(): Promise<number> {
   const rows = await query<{ count: string }>('SELECT count(*) AS count FROM products');
   return Number(rows[0]?.count ?? 0);

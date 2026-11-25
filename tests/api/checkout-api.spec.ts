@@ -2,28 +2,12 @@ import type { APIResponse } from '@playwright/test';
 import { test, expect } from '../../fixtures/test-fixtures';
 import { countOrdersForUser } from '../../database/queries';
 import { expectedTotalCents, productBySku } from '../../utils/catalog';
-import { addToCart, getCart, productIdOf } from '../../utils/api-helpers';
+import { addToCart, getCart, productIdOf, type ApiOrder } from '../../utils/api-helpers';
 import { buildNewUser, buildShipping, type ShippingDetails } from '../../utils/test-data';
 
 const mouse = productBySku('ELEC-001');
 const book = productBySku('BOOK-001');
 const tshirt = productBySku('CLTH-001');
-
-interface ApiOrder {
-  id: number;
-  status: string;
-  totalCents: number;
-  createdAt: string;
-  shipping: ShippingDetails;
-  items: Array<{
-    productId: number;
-    sku: string;
-    name: string;
-    quantity: number;
-    unitPriceCents: number;
-    lineTotalCents: number;
-  }>;
-}
 
 const orderOf = async (response: APIResponse): Promise<ApiOrder> =>
   ((await response.json()) as { order: ApiOrder }).order;

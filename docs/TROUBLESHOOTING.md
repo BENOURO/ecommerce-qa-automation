@@ -23,3 +23,16 @@ remaining flakiness explicitly as "flaky" in the HTML report.
 
 **To investigate further:** run `set LOG_REQUESTS=true` and start the app with `npm run app`, then look for
 `EVENT LOOP STALL` lines in the output while the tests run with `REUSE_SERVER=true npx playwright test`.
+
+## `--repeat-each` makes the "isolated" stock tests fail
+
+The tests in `tests/isolated/` measure exact stock numbers, so they must never run at the same time as each
+other. Normally there is one copy of each test and they run one after another. With `--repeat-each=2` and
+several workers, Playwright runs the repeated copies in parallel, and they disturb each other's stock.
+
+To repeat the suite for a stability check, repeat the parallel projects and the isolated one separately:
+
+```
+npx playwright test --project=ui --project=api --project=database --repeat-each=3
+npx playwright test --project=isolated --no-deps --repeat-each=3 --workers=1
+```
