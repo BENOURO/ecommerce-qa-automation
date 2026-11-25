@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Log in - QA Demo Shop</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <nav id="nav"></nav>
+  <main>
+    <div class="auth-wrap">
+      <h1>Welcome back</h1>
+      <p class="subtitle">Log in to manage your cart and place orders.</p>
+      <form id="login-form" class="panel" novalidate>
+        <label>Email <input id="email" name="email" type="email" data-testid="login-email" autocomplete="username"></label>
+        <label>Password <input id="password" name="password" type="password" data-testid="login-password" autocomplete="current-password"></label>
+        <p class="error" id="login-error" data-testid="login-error" role="alert"></p>
+        <button class="btn btn-primary btn-block" type="submit" data-testid="login-submit">Log in</button>
+      </form>
+    </div>
+  </main>
+  <script src="/common.js"></script>
+  <script>
+    (async () => {
+      const error = document.getElementById('login-error');
+      // Register the submit handler first: it must work the moment the form is visible,
+      // not only after the navigation bar has finished loading.
+      document.getElementById('login-form').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        error.textContent = '';
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        if (!email || !password) {
+          error.textContent = 'Email and password are required';
+          return;
+        }
+        const result = await api('POST', '/api/auth/login', { email, password });
+        if (result.ok) {
+          window.location.href = '/products';
+        } else {
+          error.textContent = result.data?.error ?? 'Login failed';
+        }
+      });
+      const user = await renderNav();
+      if (user) window.location.href = '/products';
+    })();
+  </script>
+</body>
+</html>

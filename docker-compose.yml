@@ -1,0 +1,22 @@
+# PostgreSQL for the shop under test. Values come from .env (Compose reads it automatically).
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: shop-qa-db
+    environment:
+      POSTGRES_DB: ${DB_NAME:-shop_test}
+      POSTGRES_USER: ${DB_USER:-shop_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in your .env file}
+    ports:
+      # host:container. Host port 5433 avoids clashing with a PostgreSQL already installed on 5432.
+      - "${DB_PORT:-5433}:5432"
+    volumes:
+      - shop_qa_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-shop_user} -d ${DB_NAME:-shop_test}"]
+      interval: 3s
+      timeout: 3s
+      retries: 15
+
+volumes:
+  shop_qa_pgdata:

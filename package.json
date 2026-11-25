@@ -1,0 +1,44 @@
+{
+  "name": "ecommerce-qa-automation",
+  "version": "1.0.0",
+  "description": "End-to-end QA automation framework (UI, API, PostgreSQL) for an e-commerce application, built with Playwright and TypeScript.",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "db:up": "docker compose up -d --wait",
+    "db:down": "docker compose down",
+    "db:reset": "tsx database/seed.ts",
+    "app": "tsx app/server.ts",
+    "test": "playwright test",
+    "test:smoke": "playwright test --grep @smoke",
+    "test:ui": "playwright test --project=ui",
+    "test:api": "playwright test --project=api",
+    "test:db": "playwright test --project=database",
+    "report": "playwright show-report reports/html"
+  },
+  "keywords": [
+    "playwright",
+    "typescript",
+    "qa-automation",
+    "postgresql",
+    "e2e",
+    "api-testing"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "@playwright/test": "^1.65.1",
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.6.6",
+    "@types/pg": "^8.23.1",
+    "dotenv": "^18.0.10",
+    "pg": "^8.23.1",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  },
+  "dependencies": {
+    "express": "^5.3.0"
+  }
+}

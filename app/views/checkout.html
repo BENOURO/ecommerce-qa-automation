@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Checkout - QA Demo Shop</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <nav id="nav"></nav>
+  <main>
+    <h1>Checkout</h1>
+    <p style="color:var(--muted);margin-top:0">No payment is taken. This demo shop only collects shipping details.</p>
+    <div class="checkout-layout">
+      <form id="checkout-form" class="panel" novalidate>
+        <h2>Shipping details</h2>
+        <label>Full name <input name="name" data-testid="checkout-name" autocomplete="name"></label>
+        <p class="error" data-testid="error-name"></p>
+        <label>Email <input name="email" type="email" data-testid="checkout-email" autocomplete="email"></label>
+        <p class="error" data-testid="error-email"></p>
+        <label>Address <input name="address" data-testid="checkout-address" autocomplete="street-address"></label>
+        <p class="error" data-testid="error-address"></p>
+        <label>City <input name="city" data-testid="checkout-city" autocomplete="address-level2"></label>
+        <p class="error" data-testid="error-city"></p>
+        <label>Postal code <input name="postalCode" data-testid="checkout-postal-code" autocomplete="postal-code"></label>
+        <p class="error" data-testid="error-postalCode"></p>
+        <p class="error" id="form-error" data-testid="checkout-error" role="alert"></p>
+        <button class="btn btn-primary btn-block" type="submit" id="place-order" data-testid="place-order">Place order</button>
+      </form>
+      <aside class="panel summary" data-testid="order-summary">
+        <h2>Order summary</h2>
+        <ul id="summary-items"></ul>
+        <div class="total"><span>Total</span><span id="summary-total" data-testid="summary-total"></span></div>
+      </aside>
+    </div>
+  </main>
+  <script src="/common.js"></script>
+  <script>
+    (async () => {
+      const form = document.getElementById('checkout-form');
+      const placeOrder = document.getElementById('place-order');
+      const formError = document.getElementById('form-error');
+
+      // Register the submit handler first so the form works as soon as it is visible.
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        form.querySelectorAll('.error').forEach((el) => { el.textContent = ''; });
+        const data = Object.fromEntries(new FormData(form).entries());
+        const result = await api('POST', '/api/orders', { shipping: data });
+        if (result.status === 201) {
+          window.location.href = '/orders/' + result.data.order.id + '/confirmation';
+          return;
+        }
+        if (result.status === 401) { window.location.href = '/login'; return; }
+        const details = result.data?.details ?? {};
+        for (const [field, text] of Object.entries(details)) {
+          const target = form.querySelector('[data-testid="error-' + field + '"]');
+          if (target) target.textContent = text;
+        }
+        if (Object.keys(details).length === 0) formError.textContent = result.data?.error ?? 'Order failed';
+      });
+
+      if (!(await requireLogin())) return;
+      const cartResult = await api('GET', '/api/cart');
+      const cart = cartResult.data.cart;
+      document.getElementById('summary-items').innerHTML = cart.items.map((i) =>
+        `<li data-testid="summary-item">${productImage(i.sku, i.name)}<span>${esc(i.name)} &times; ${i.quantity} &mdash; ${money(i.lineTotalCents)}</span></li>`).join('');
+      document.getElementById('summary-total').textContent = money(cart.totalCents);
+      if (cart.items.length === 0) {
+        formError.textContent = 'Your cart is empty';
+        placeOrder.disabled = true;
+      }
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Order confirmation - QA Demo Shop</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <nav id="nav"></nav>
+  <main>
+    <div class="confirm">
+      <div class="tick" aria-hidden="true">&#10003;</div>
+      <h1 data-testid="confirmation-heading">Thank you for your order!</h1>
+      <section class="panel summary" id="order" data-testid="order-details"></section>
+      <p><a class="btn btn-primary" href="/products">Continue shopping</a></p>
+    </div>
+  </main>
+  <script src="/common.js"></script>
+  <script>
+    (async () => {
+      if (!(await requireLogin())) return;
+      const id = window.location.pathname.split('/')[2];
+      const result = await api('GET', '/api/orders/' + encodeURIComponent(id));
+      const box = document.getElementById('order');
+      if (!result.ok) {
+        document.querySelector('h1').textContent = 'Order unavailable';
+        document.querySelector('.tick').hidden = true;
+        box.innerHTML = '<p data-testid="order-error">' + esc(result.data?.error ?? 'Order not found') + '</p>';
+        return;
+      }
+      const o = result.data.order;
+      box.innerHTML = `
+        <div class="summary-row"><span>Order number</span><strong data-testid="order-number">${o.id}</strong></div>
+        <div class="summary-row"><span>Status</span><strong data-testid="order-status">${esc(o.status)}</strong></div>
+        <ul>${o.items.map((i) => `<li data-testid="order-item">${productImage(i.sku, i.name)}<span>${esc(i.name)} &times; ${i.quantity} &mdash; ${money(i.lineTotalCents)}</span></li>`).join('')}</ul>
+        <div class="total"><span>Total</span><span data-testid="order-total">${money(o.totalCents)}</span></div>
+        <h3>Shipping to</h3>
+        <p data-testid="order-shipping">${esc(o.shipping.name)}<br>${esc(o.shipping.address)}<br>${esc(o.shipping.city)} ${esc(o.shipping.postalCode)}<br>${esc(o.shipping.email)}</p>`;
+    })();
+  </script>
+</body>
+</html>

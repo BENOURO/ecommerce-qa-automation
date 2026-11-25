@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cart - QA Demo Shop</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <nav id="nav"></nav>
+  <main>
+    <h1>Your cart</h1>
+    <p class="error" id="cart-error" data-testid="cart-error" role="alert"></p>
+    <p class="empty" id="cart-empty" data-testid="cart-empty" hidden>Your cart is empty.<br><br><a class="btn btn-primary" href="/products">Browse products</a></p>
+    <div id="cart-content" class="cart-layout" hidden>
+      <div class="panel">
+        <table>
+          <thead><tr><th>Product</th><th>Price</th><th>Quantity</th><th>Subtotal</th><th></th></tr></thead>
+          <tbody id="cart-rows"></tbody>
+        </table>
+      </div>
+      <aside class="panel summary">
+        <h2>Order total</h2>
+        <div class="total"><span>Total</span><span data-testid="cart-total" id="cart-total"></span></div>
+        <a class="btn btn-primary btn-block" href="/checkout" data-testid="checkout-button">Proceed to checkout</a>
+        <p class="secure-note">No payment is taken in this demo.</p>
+      </aside>
+    </div>
+  </main>
+  <script src="/common.js"></script>
+  <script>
+    (async () => {
+      const rows = document.getElementById('cart-rows');
+      const errorBox = document.getElementById('cart-error');
+
+      async function load() {
+        const result = await api('GET', '/api/cart');
+        if (result.status === 401) { window.location.href = '/login'; return; }
+        const cart = result.data.cart;
+        document.getElementById('cart-empty').hidden = cart.items.length > 0;
+        document.getElementById('cart-content').hidden = cart.items.length === 0;
+        document.getElementById('cart-total').textContent = money(cart.totalCents);
+        rows.innerHTML = cart.items.map((i) => `
+          <tr data-testid="cart-item" data-product-id="${i.productId}">
+            <td><div class="cell-product">${productImage(i.sku, i.name)}<span data-testid="item-name">${esc(i.name)}</span></div></td>
+            <td data-testid="item-price">${money(i.unitPriceCents)}</td>
+            <td><input type="number" min="1" value="${i.quantity}" aria-label="Quantity for ${esc(i.name)}" data-testid="item-quantity"></td>
+            <td data-testid="item-subtotal">${money(i.lineTotalCents)}</td>
+            <td><button class="btn" data-testid="item-remove">Remove</button></td>
+          </tr>`).join('');
+        await renderNav();
+      }
+
+      rows.addEventListener('change', async (event) => {
+        const input = event.target.closest('[data-testid="item-quantity"]');
+        if (!input) return;
+        const productId = Number(input.closest('[data-product-id]').dataset.productId);
+        const result = await api('PATCH', '/api/cart/items/' + productId, { quantity: Number(input.value) });
+        errorBox.textContent = result.ok ? '' : (result.data?.error ?? 'Could not update quantity');
+        await load();
+      });
+      rows.addEventListener('click', async (event) => {
+        const button = event.target.closest('[data-testid="item-remove"]');
+        if (!button) return;
+        const productId = Number(button.closest('[data-product-id]').dataset.productId);
+        await api('DELETE', '/api/cart/items/' + productId);
+        errorBox.textContent = '';
+        await load();
+      });
+      if (await requireLogin()) load();
+    })();
+  </script>
+</body>
+</html>

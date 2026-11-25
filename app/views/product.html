@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Product - QA Demo Shop</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <nav id="nav"></nav>
+  <main>
+    <a class="back-link" href="/products">&larr; Back to products</a>
+    <section id="detail" data-testid="product-detail"></section>
+    <p class="message" id="cart-message" data-testid="cart-message" role="status" style="margin-top:12px"></p>
+  </main>
+  <script src="/common.js"></script>
+  <script>
+    (async () => {
+      await renderNav();
+      const detail = document.getElementById('detail');
+      const message = document.getElementById('cart-message');
+      const id = window.location.pathname.split('/').pop();
+      const result = await api('GET', '/api/products/' + encodeURIComponent(id));
+      if (!result.ok) {
+        detail.innerHTML = '<p class="empty" data-testid="product-not-found">Product not found.</p>';
+        return;
+      }
+      const p = result.data.product;
+      document.title = p.name + ' - QA Demo Shop';
+      detail.innerHTML = `
+        <div class="product-layout">
+          <div class="hero-image">${productImage(p.sku, p.name)}</div>
+          <div>
+            <span class="chip" data-testid="detail-category">${esc(p.category)}</span>
+            <h1 style="margin-top:10px" data-testid="detail-name">${esc(p.name)}</h1>
+            <p style="color:var(--muted);margin:0 0 12px" data-testid="detail-sku">SKU: ${esc(p.sku)}</p>
+            <p class="price" data-testid="detail-price">${money(p.priceCents)}</p>
+            <p class="stock ${p.inStock ? '' : 'out-of-stock'}" data-testid="detail-stock">${p.inStock ? 'In stock' : 'Out of stock'}</p>
+            <p data-testid="detail-description">${esc(p.description)}</p>
+            <div class="qty-row">
+              <label>Quantity <input id="quantity" type="number" min="1" value="1" data-testid="detail-quantity"></label>
+              <button id="add" class="btn btn-primary" data-testid="detail-add-to-cart" ${p.inStock ? '' : 'disabled'}>Add to cart</button>
+            </div>
+          </div>
+        </div>`;
+      document.getElementById('add').addEventListener('click', async () => {
+        const quantity = Number(document.getElementById('quantity').value);
+        const added = await api('POST', '/api/cart/items', { productId: p.id, quantity });
+        if (added.status === 401) { window.location.href = '/login'; return; }
+        message.textContent = added.ok ? 'Added to cart' : (added.data?.error ?? 'Could not add to cart');
+        await renderNav();
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Products - QA Demo Shop</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <nav id="nav"></nav>
+  <main>
+    <section class="hero">
+      <h1>Products</h1>
+      <p>Electronics, books and clothing: browse the catalog, add items to your cart and check out.</p>
+    </section>
+    <form id="filters" class="toolbar">
+      <input id="search" type="search" placeholder="Search products" aria-label="Search products" data-testid="search-input">
+      <button class="btn btn-primary" type="submit" data-testid="search-button">Search</button>
+      <select id="category" aria-label="Category" data-testid="category-filter">
+        <option value="">All categories</option>
+        <option>Electronics</option>
+        <option>Books</option>
+        <option>Clothing</option>
+      </select>
+      <select id="sort" aria-label="Sort by" data-testid="sort-select">
+        <option value="">Default order</option>
+        <option value="price_asc">Price: low to high</option>
+        <option value="price_desc">Price: high to low</option>
+        <option value="name_asc">Name: A to Z</option>
+      </select>
+      <label class="check"><input id="in-stock" type="checkbox" data-testid="in-stock-filter"> In stock only</label>
+    </form>
+    <p class="message" id="cart-message" data-testid="cart-message" role="status"></p>
+    <p class="results" id="results-count" data-testid="results-count"></p>
+    <div id="product-grid" class="grid" data-testid="product-grid"></div>
+    <p class="empty" id="no-results" data-testid="no-results" hidden>No products found. Try a different search or filter.</p>
+  </main>
+  <script src="/common.js"></script>
+  <script>
+    (async () => {
+      renderNav(); // not awaited: filters and cards must not wait for the navigation bar
+      const grid = document.getElementById('product-grid');
+      const message = document.getElementById('cart-message');
+
+      async function load() {
+        const params = new URLSearchParams();
+        const search = document.getElementById('search').value.trim();
+        if (search) params.set('search', search);
+        const category = document.getElementById('category').value;
+        if (category) params.set('category', category);
+        const sort = document.getElementById('sort').value;
+        if (sort) params.set('sort', sort);
+        if (document.getElementById('in-stock').checked) params.set('inStock', 'true');
+        const result = await api('GET', '/api/products?' + params.toString());
+        const products = result.ok ? result.data.products : [];
+        document.getElementById('results-count').textContent = products.length + ' product(s)';
+        document.getElementById('no-results').hidden = products.length > 0;
+        grid.innerHTML = products.map((p) => `
+          <article class="product-card" data-testid="product-card" data-product-id="${p.id}">
+            <a class="image-link" href="/products/${p.id}" tabindex="-1" aria-hidden="true">${productImage(p.sku, p.name)}</a>
+            <div class="body">
+              <span class="chip">${esc(p.category)}</span>
+              <h3><a href="/products/${p.id}" data-testid="product-name">${esc(p.name)}</a></h3>
+              <p class="price" data-testid="product-price">${money(p.priceCents)}</p>
+              ${p.inStock
+                ? '<p class="stock" data-testid="stock-status">In stock</p>'
+                : '<p class="stock out-of-stock" data-testid="stock-status">Out of stock</p>'}
+              <button class="btn btn-primary btn-block" data-testid="add-to-cart" ${p.inStock ? '' : 'disabled'}>Add to cart</button>
+            </div>
+          </article>`).join('');
+      }
+
+      grid.addEventListener('click', async (event) => {
+        const button = event.target.closest('[data-testid="add-to-cart"]');
+        if (!button) return;
+        const card = button.closest('[data-product-id]');
+        const productId = Number(card.dataset.productId);
+        const result = await api('POST', '/api/cart/items', { productId, quantity: 1 });
+        if (result.status === 401) { window.location.href = '/login'; return; }
+        message.textContent = result.ok
+          ? 'Added "' + card.querySelector('[data-testid="product-name"]').textContent + '" to cart'
+          : (result.data?.error ?? 'Could not add to cart');
+        await renderNav();
+      });
+
+      document.getElementById('filters').addEventListener('submit', (event) => { event.preventDefault(); load(); });
+      ['category', 'sort', 'in-stock'].forEach((id) => document.getElementById(id).addEventListener('change', load));
+      load();
+    })();
+  </script>
+</body>
+</html>
