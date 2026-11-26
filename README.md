@@ -11,7 +11,7 @@ It is a portfolio project: the shop under test is a small application I built so
 
 ## Results at a glance
 
-| | |
+| Measure | Result |
 |---|---|
 | Automated test executions | **270** (UI 93, end-to-end 5, API 116, database 53, isolated stock 3) |
 | Documented test cases | **202**, with IDs, priorities, steps and expected results: [`docs/TEST-CASES.md`](docs/TEST-CASES.md) |
