@@ -22,7 +22,9 @@
     "test:e2e": "playwright test --project=e2e",
     "test:bugs": "cross-env BUGS=all REPORT_DIR=reports/html-bugs JSON_REPORT=reports/results-bugs.json playwright test",
     "report:bugs": "playwright show-report reports/html-bugs",
-    "bug-matrix": "node scripts/bug-matrix.mjs"
+    "bug-matrix": "node scripts/bug-matrix.mjs",
+    "docs:tests": "node scripts/generate-test-docs.mjs",
+    "docs:check": "node scripts/generate-test-docs.mjs --check"
   },
   "keywords": [
     "playwright",
