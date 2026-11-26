@@ -8,7 +8,13 @@ Every number below comes from real runs of this repository (270 test executions,
 
 **Project link:** https://github.com/BENOURO/ecommerce-qa-automation
 
-**Skills (Upwork allows 10):** Playwright, TypeScript, Test Automation, API Testing, PostgreSQL, SQL, GitHub Actions, CI/CD, QA Testing, Node.js
+**Skills:** a portfolio project accepts only **5** skills, and "Playwright" and "GitHub Actions" do not exist in Upwork's skill list. Used: Test Automation Framework, TypeScript, CI/CD, SQL, API Testing.
+
+**Description actually published** (Upwork limits it to **600 characters**):
+
+```
+QA automation framework that tests an e-commerce shop from the UI through the API down to PostgreSQL and checks that all layers agree. 270 automated tests (Playwright + TypeScript), page objects, auto-cleaned test data, HTML report and GitHub Actions CI. Proof it works: I injected 10 realistic bugs (wrong totals, leaked hashes, duplicate orders...) and the suite caught 10 of 10. It also found 4 real bugs while I built it. 202 documented test cases. The shop is my own demo app, so I can test its real API and database. Code: github.com/BENOURO/ecommerce-qa-automation
+```
 
 **Images, in this order** (all in `docs/images/`):
 1. `report-passing.png`: the HTML report, 270 passing (cover image)
@@ -17,7 +23,7 @@ Every number below comes from real runs of this repository (270 test executions,
 4. `shop-checkout-validation.png`: checkout validation
 5. A screenshot of the green run in your repository's Actions tab (take it yourself)
 
-**Description** (about 2,400 characters; Upwork allows 5,000):
+**Longer description** (too long for the project card; use it in proposals, cover letters or the GitHub profile):
 
 ```
 I built a complete automated testing framework that tests an e-commerce web shop from the user interface, through its API, down to the PostgreSQL database, and checks that all three layers agree.
@@ -75,8 +81,8 @@ Let's find the problems before your users do.
 
 ## 3. Profile settings to change
 
-- Add these to your profile **Skills**: TypeScript, PostgreSQL, SQL, GitHub Actions, CI/CD, API Testing, Docker, Node.js.
-- Turn on **Open for work** (it is Off now), so clients can find and invite you.
+- Profile **Skills** added: TypeScript, PostgreSQL, SQL, CI/CD, API Testing, Docker, Node.js (Upwork has no "Playwright" or "GitHub Actions" skill).
+- **Open for work** is a paid feature: it spends Connects (the default budget is 14 Connects per week) when clients invite you. Turn it on only if you want that.
 - Optional: a short video introduction, and a skills test or certification related to QA.
 
 ## Before you publish
