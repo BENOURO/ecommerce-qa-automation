@@ -111,6 +111,15 @@ try {
     await reportPage.goto(`http://localhost:${port}/`);
     await reportPage.getByText(/Total time/i).first().waitFor({ timeout: 15_000 }).catch(() => {});
     await reportPage.waitForTimeout(800);
+    // Error messages contain the full path of this computer (C:\Users\<name>\...): shorten it before every screenshot.
+    const hidePaths = () =>
+      reportPage.evaluate(() => {
+        const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+        for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+          node.textContent = node.textContent.replace(/[A-Za-z]:\\Users\\[^\\]+\\.*?(?=tests\\)/g, '…\\');
+        }
+      });
+    await hidePaths();
     await reportPage.screenshot({ path: `${outDir}/${name}.png` });
     if (name === 'report-seeded-bugs') {
       // Open one failed test to show its error, screenshot and trace attachments.
@@ -118,6 +127,7 @@ try {
       if (await failed.count()) {
         await failed.click();
         await reportPage.waitForTimeout(1200);
+        await hidePaths();
         await reportPage.screenshot({ path: `${outDir}/report-failure-detail.png` });
       }
     }

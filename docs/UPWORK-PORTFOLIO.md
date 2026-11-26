@@ -1,22 +1,25 @@
-# Upwork portfolio entry (ready to paste)
+# Upwork: ready-to-paste texts
 
-Add it at: Upwork profile > Portfolio > Add project. Attach the images from `docs/images/` (see the list at the end).
-Every number below comes from real runs of this repository.
+Every number below comes from real runs of this repository (270 test executions, 202 documented test cases, 10 of 10 injected bugs caught, CI green on GitHub Actions).
 
-## Project title
+## 1. Portfolio project: Add project (or edit the existing one)
 
-E-Commerce QA Automation Framework: Playwright, TypeScript, API and PostgreSQL testing with CI
+**Title:** QA Automation: Playwright, TypeScript, API and PostgreSQL
 
-## Project link
+**Project link:** https://github.com/BENOURO/ecommerce-qa-automation
 
-https://github.com/BENOURO/ecommerce-qa-automation
+**Skills (Upwork allows 10):** Playwright, TypeScript, Test Automation, API Testing, PostgreSQL, SQL, GitHub Actions, CI/CD, QA Testing, Node.js
 
-## Skills to tag
+**Images, in this order** (all in `docs/images/`):
+1. `report-passing.png`: the HTML report, 270 passing (cover image)
+2. `report-failure-detail.png`: a caught defect, expected versus received
+3. `shop-products.png`: the application under test
+4. `shop-checkout-validation.png`: checkout validation
+5. A screenshot of the green run in your repository's Actions tab (take it yourself)
 
-Playwright, TypeScript, Test Automation, QA Testing, API Testing, PostgreSQL, SQL, GitHub Actions, CI/CD, Quality Assurance, Test Automation Framework, Node.js
+**Description** (about 2,400 characters; Upwork allows 5,000):
 
-## Description (fits Upwork's 5,000-character limit)
-
+```
 I built a complete automated testing framework that tests an e-commerce web shop from the user interface, through its API, down to the PostgreSQL database, and checks that all three layers agree.
 
 THE PROBLEM IT SOLVES
@@ -27,7 +30,7 @@ WHAT I DELIVERED
 - Coverage of authentication and sessions, product search, filters and sorting, shopping cart, checkout and orders, authorization (401/403), input validation, SQL injection attempts, and database integrity rules (unique, check, not-null and foreign keys).
 - Page Object Model, reusable fixtures, generated test data with automatic cleanup, parallel execution, and no sleeps (Playwright auto-waiting and web-first assertions).
 - A professional HTML report with totals, durations, failure details, screenshots and traces.
-- A GitHub Actions pipeline that starts PostgreSQL, runs the full suite on every push (about 1 minute 15 seconds in CI), and publishes the report.
+- A GitHub Actions pipeline that starts PostgreSQL, runs the full suite on every push (about 1 minute 15 seconds), and publishes the report.
 - A test case document with ID, priority, preconditions, steps and expected result for every case, checked automatically so it cannot drift from the code.
 
 PROOF THAT THE TESTS WORK
@@ -35,31 +38,48 @@ PROOF THAT THE TESTS WORK
 - While building it, the tests found 4 real bugs in the application, including a double-click that created two orders and an empty cart that still showed its checkout button.
 
 HOW I WORK
-- I read the specification, plan the test cases, then automate the highest-risk paths first (money, security, data integrity).
-- I investigate failures down to the root cause instead of adding waits or retries, and I report honestly what passed, what failed and what I could not verify.
+I plan test cases from the specification, automate the highest-risk paths first (money, security, data integrity), investigate failures down to the root cause instead of adding waits, and report honestly what passed, what failed and what I could not verify.
 
 TECH STACK
 TypeScript, Playwright, Node.js, PostgreSQL (Docker Compose), Express, GitHub Actions.
 
-The repository includes a README, architecture diagram, screenshots, and instructions to run everything with a few commands.
+The repository has a README, architecture diagram, screenshots, and instructions to run everything with a few commands. The shop under test is my own demo application, which lets me test the real API and database.
+```
 
-## Short version (for the project card or a proposal)
+## 2. Profile overview (replace the Overview text)
 
-Full QA automation framework (Playwright + TypeScript + PostgreSQL + GitHub Actions): 270 automated tests across UI, API and database, cross-layer checks, an HTML report, CI, and 10 injected bugs that the suite catches (10 of 10). Repository: https://github.com/BENOURO/ecommerce-qa-automation
+```
+I help businesses test their web applications, find bugs, and make sure everything works before it reaches users. I also automate the checks that matter, so they run automatically on every release.
 
-## Suggested profile overview paragraph
+I have a software development background (JavaScript, TypeScript, Vue.js, Spring Boot), so I understand an application from both the user's and the developer's side.
 
-I am a QA automation engineer focused on Playwright and TypeScript. I test web applications from the browser to the API to the database, so a wrong total or a leaked field is caught wherever it hides. My portfolio project (link above) shows a full framework with CI, reports and documented test cases.
+FEATURED PROJECT (see my portfolio)
+A full Playwright + TypeScript automation framework with PostgreSQL checks and GitHub Actions CI: 270 automated tests across UI, API and database, an HTML report, and 10 injected bugs that the suite catches (10 of 10).
 
-## Images to attach, in this order
+MY SERVICES
+- Playwright test automation (TypeScript / JavaScript) with CI pipelines
+- API testing with Playwright and Postman: requests, responses, authentication, error handling
+- Database validation with SQL (PostgreSQL): data integrity and API-to-database consistency
+- Manual website testing: functional testing, user flows, UI/UX issues
+- Bug reporting: clear reproduction steps, screenshots, detailed reports
+- Regression testing: making sure existing features still work after updates
+- Cross-browser testing: checking behavior across different browsers
 
-1. `docs/images/report-passing.png`: the HTML report, all passing
-2. `docs/images/report-failure-detail.png`: a caught defect, expected versus received
-3. `docs/images/shop-products.png`: the application under test
-4. `docs/images/shop-checkout-validation.png`: the checkout validation
-5. A screenshot of the green GitHub Actions run (take it from your repository's Actions tab)
+TOOLS AND TECHNOLOGIES
+Playwright, TypeScript, JavaScript, Postman, SQL and PostgreSQL, GitHub Actions, Docker, Git and GitHub, React and Vue.js, Spring Boot, Python.
+
+I focus on clear communication, detailed reporting and reliable results. Whether you need a new feature tested, a bug investigated, an API validated, or your key user flows automated, I can help.
+
+Let's find the problems before your users do.
+```
+
+## 3. Profile settings to change
+
+- Add these to your profile **Skills**: TypeScript, PostgreSQL, SQL, GitHub Actions, CI/CD, API Testing, Docker, Node.js.
+- Turn on **Open for work** (it is Off now), so clients can find and invite you.
+- Optional: a short video introduction, and a skills test or certification related to QA.
 
 ## Before you publish
 
-- Do not claim client work. The shop is your own demo application, and the README says so.
-- If a client asks, be ready to explain the "Known limitations" section of the README.
+- Do not present the shop as client work. The README says it is your own demo application.
+- Be ready to explain the "Known limitations" section of the README if a client asks (for example: tests run in Chromium only).
