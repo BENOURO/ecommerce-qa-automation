@@ -19,6 +19,8 @@ export default defineConfig({
   expect: { timeout: 7_000 }, // how long web-first assertions keep retrying
 
   reporter: [
+    // On GitHub, failures are also shown as annotations on the run page.
+    ...(isCI ? ([['github']] as const) : []),
     ['list'],
     // REPORT_DIR / JSON_REPORT let the "seeded bugs" run write its own report without overwriting the normal one.
     ['html', { outputFolder: process.env.REPORT_DIR ?? 'reports/html', open: 'never' }],

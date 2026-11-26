@@ -5,6 +5,7 @@ node_modules/
 test-results/
 playwright-report/
 reports/html/
+reports/html-bugs/
 reports/*.json
 blob-report/
 playwright/.cache/

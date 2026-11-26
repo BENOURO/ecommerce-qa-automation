@@ -1,0 +1,159 @@
+name: Playwright tests
+
+# Runs the whole suite (UI, end-to-end, API, database, isolated stock tests) against a fresh PostgreSQL.
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      seeded_bugs:
+        description: 'Also run the seeded-bug demo (it is EXPECTED to show failures)'
+        type: boolean
+        default: false
+
+# A newer push to the same branch cancels the older run that is still going.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: Test suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    # PostgreSQL starts next to the job. Everything below is a throwaway value for this temporary
+    # database and these test accounts: it exists only for the duration of the run and is not a real credential.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: shop_test
+          POSTGRES_USER: shop_user
+          POSTGRES_PASSWORD: ci_only_database_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U shop_user -d shop_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+
+    env:
+      BASE_URL: http://localhost:3000
+      APP_PORT: 3000
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_NAME: shop_test
+      DB_USER: shop_user
+      DB_PASSWORD: ci_only_database_password
+      TEST_USER_EMAIL: standard.user@example.test
+      TEST_USER_PASSWORD: ci_only_test_password
+      ADMIN_EMAIL: admin@example.test
+
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install the Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Check the TypeScript code
+        run: npm run typecheck
+
+      - name: Create the database tables and seed data
+        run: npm run db:reset
+
+      # Playwright starts the shop itself (see "webServer" in playwright.config.ts) and stops it afterwards.
+      - name: Run the tests
+        run: npx playwright test
+
+      - name: Write the run summary
+        if: always()
+        run: node scripts/ci-summary.mjs
+
+      # The HTML report and the raw results are kept even when tests fail.
+      - name: Upload the HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: reports/
+          retention-days: 30
+
+      # Screenshots, videos and traces of failed tests.
+      - name: Upload failure artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: test-results/
+          retention-days: 14
+
+  seeded-bugs-demo:
+    name: Seeded-bug demo (failures expected)
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.seeded_bugs }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    continue-on-error: true # the point of this job is to show tests failing, so it must not fail the workflow
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: shop_test
+          POSTGRES_USER: shop_user
+          POSTGRES_PASSWORD: ci_only_database_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U shop_user -d shop_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+
+    env:
+      BASE_URL: http://localhost:3000
+      APP_PORT: 3000
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_NAME: shop_test
+      DB_USER: shop_user
+      DB_PASSWORD: ci_only_database_password
+      TEST_USER_EMAIL: standard.user@example.test
+      TEST_USER_PASSWORD: ci_only_test_password
+      ADMIN_EMAIL: admin@example.test
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run db:reset
+
+      # All ten seeded defects switched on: many tests are expected to fail.
+      - name: Run the tests against the defective shop
+        run: npm run test:bugs
+
+      - name: Upload the report of the defective run
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-seeded-bugs
+          path: reports/html-bugs/
+          retention-days: 14
