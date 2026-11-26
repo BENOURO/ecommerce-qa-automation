@@ -18,7 +18,11 @@
     "test:api": "playwright test --project=api",
     "test:db": "playwright test --project=database",
     "test:isolated": "playwright test --project=isolated --no-deps",
-    "report": "playwright show-report reports/html"
+    "report": "playwright show-report reports/html",
+    "test:e2e": "playwright test --project=e2e",
+    "test:bugs": "cross-env BUGS=all REPORT_DIR=reports/html-bugs JSON_REPORT=reports/results-bugs.json playwright test",
+    "report:bugs": "playwright show-report reports/html-bugs",
+    "bug-matrix": "node scripts/bug-matrix.mjs"
   },
   "keywords": [
     "playwright",
@@ -34,6 +38,7 @@
     "@types/express": "^5.0.6",
     "@types/node": "^26.6.6",
     "@types/pg": "^8.23.1",
+    "cross-env": "^10.1.0",
     "dotenv": "^18.0.10",
     "pg": "^8.23.1",
     "tsx": "^4.23.15",

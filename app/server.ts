@@ -2,6 +2,7 @@ import express, { type NextFunction, type Request, type Response } from 'express
 import { resolve } from 'node:path';
 import { closePool, query } from '../database/connection';
 import { env } from '../utils/env';
+import { enabledBugs, hasBug } from './bugs';
 import { HttpError } from './http';
 import { authRouter } from './routes/auth';
 import { cartRouter } from './routes/cart';
@@ -48,7 +49,9 @@ app.use('/api/cart', cartRouter);
 app.use('/api/orders', ordersRouter);
 
 app.get('/api/admin/users', requireAuth, requireAdmin, async (_req, res) => {
-  const users = await query(`SELECT id, email, full_name AS "fullName", role FROM users ORDER BY id`);
+  // SEEDED DEFECT when the bug is on: password hashes are included in the response.
+  const hashColumn = hasBug('leak-password-hash') ? `, password_hash AS "passwordHash"` : '';
+  const users = await query(`SELECT id, email, full_name AS "fullName", role${hashColumn} FROM users ORDER BY id`);
   res.status(200).json({ users });
 });
 
@@ -90,6 +93,9 @@ app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
 
 const server = app.listen(env.appPort, () => {
   console.log(`Shop app listening on http://localhost:${env.appPort}`);
+  if (enabledBugs().length > 0) {
+    console.warn(`WARNING: seeded defects are ON: ${enabledBugs().join(', ')}. This is for demonstration only.`);
+  }
 });
 
 async function shutdown(): Promise<void> {

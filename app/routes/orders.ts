@@ -1,5 +1,6 @@
 import { Router, type NextFunction, type Request, type Response } from 'express';
 import { getPool, query } from '../../database/connection';
+import { hasBug } from '../bugs';
 import { HttpError, bodyOf, isEmail, isNonEmptyString, parseId } from '../http';
 import { requireAuth } from '../sessions';
 import { cartEntries, clearCart } from './cart';
@@ -71,7 +72,7 @@ const ordersInProgress = new Set<number>();
 
 function oneOrderAtATime(req: Request, res: Response, next: NextFunction): void {
   const userId = req.user!.id;
-  if (ordersInProgress.has(userId)) {
+  if (ordersInProgress.has(userId) && !hasBug('no-order-lock')) {
     res.status(409).json({ error: 'An order is already being placed' });
     return;
   }
@@ -115,7 +116,8 @@ ordersRouter.post('/', oneOrderAtATime, async (req, res) => {
       const product = byId.get(entry.productId);
       if (!product) throw new HttpError(409, 'A product in your cart is no longer available');
       if (entry.quantity > product.stockQuantity) throw new HttpError(409, 'Insufficient stock for an item in your cart');
-      totalCents += product.priceCents * entry.quantity;
+      // SEEDED DEFECT when the bug is on: one unit is charged per product, whatever the quantity.
+      totalCents += product.priceCents * (hasBug('order-total-ignores-quantity') ? 1 : entry.quantity);
     }
 
     const { rows: created } = await client.query<{ id: number }>(
@@ -141,10 +143,12 @@ ordersRouter.post('/', oneOrderAtATime, async (req, res) => {
          VALUES ($1, $2, $3, $4)`,
         [orderId, entry.productId, entry.quantity, product.priceCents],
       );
-      await client.query(
-        `UPDATE products SET stock_quantity = stock_quantity - $1 WHERE id = $2`,
-        [entry.quantity, entry.productId],
-      );
+      if (!hasBug('stock-not-decreased')) {
+        await client.query(
+          `UPDATE products SET stock_quantity = stock_quantity - $1 WHERE id = $2`,
+          [entry.quantity, entry.productId],
+        );
+      }
     }
     await client.query('COMMIT');
     clearCart(userId);

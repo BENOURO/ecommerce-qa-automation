@@ -20,8 +20,9 @@ export default defineConfig({
 
   reporter: [
     ['list'],
-    ['html', { outputFolder: 'reports/html', open: 'never' }],
-    ['json', { outputFile: 'reports/results.json' }],
+    // REPORT_DIR / JSON_REPORT let the "seeded bugs" run write its own report without overwriting the normal one.
+    ['html', { outputFolder: process.env.REPORT_DIR ?? 'reports/html', open: 'never' }],
+    ['json', { outputFile: process.env.JSON_REPORT ?? 'reports/results.json' }],
   ],
   outputDir: 'test-results', // screenshots, traces and videos of failures
 
@@ -36,11 +37,13 @@ export default defineConfig({
   // One "project" per layer, so you can run them separately: npm run test:ui / test:api / test:db
   projects: [
     { name: 'ui', testDir: './tests/ui', use: { ...devices['Desktop Chrome'] } },
+    // Journeys that cross all layers: a real browser, then the API and the database to confirm the result.
+    { name: 'e2e', testDir: './tests/e2e', use: { ...devices['Desktop Chrome'] } },
     { name: 'api', testDir: './tests/api' },
     { name: 'database', testDir: './tests/database' },
     // Tests that measure exact stock numbers. They run last and alone: `dependencies` makes Playwright
     // finish the three projects above first, so no parallel test changes stock under them.
-    { name: 'isolated', testDir: './tests/isolated', dependencies: ['ui', 'api', 'database'] },
+    { name: 'isolated', testDir: './tests/isolated', dependencies: ['ui', 'e2e', 'api', 'database'] },
   ],
 
   // Playwright starts the shop before the tests and stops it afterwards.

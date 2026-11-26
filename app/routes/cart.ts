@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { query } from '../../database/connection';
+import { hasBug } from '../bugs';
 import { HttpError, bodyOf, isQuantity, parseId } from '../http';
 import { requireAuth } from '../sessions';
 
@@ -64,7 +65,10 @@ async function cartView(userId: number) {
       lineTotalCents: p.priceCents * quantity,
     };
   });
-  const totalCents = items.reduce((sum, i) => sum + i.lineTotalCents, 0);
+  // SEEDED DEFECT when the bug is on: the total adds one unit price per product and ignores quantities.
+  const totalCents = hasBug('wrong-cart-total')
+    ? items.reduce((sum, i) => sum + i.unitPriceCents, 0)
+    : items.reduce((sum, i) => sum + i.lineTotalCents, 0);
   const itemCount = items.reduce((sum, i) => sum + i.quantity, 0);
   return { items, itemCount, totalCents };
 }
@@ -83,7 +87,7 @@ cartRouter.post('/items', async (req, res) => {
   if (product.stockQuantity === 0) throw new HttpError(409, 'Product is out of stock');
   const cart = cartOf(req.user!.id);
   const newQuantity = (cart.get(productId) ?? 0) + body.quantity;
-  if (newQuantity > product.stockQuantity) {
+  if (newQuantity > product.stockQuantity && !hasBug('oversell-in-cart')) {
     throw new HttpError(409, `Only ${product.stockQuantity} units available`);
   }
   cart.set(productId, newQuantity);
@@ -99,7 +103,7 @@ cartRouter.patch('/items/:productId', async (req, res) => {
   const cart = cartOf(req.user!.id);
   if (!cart.has(productId)) throw new HttpError(404, 'Product is not in the cart');
   const product = await findProduct(productId);
-  if (body.quantity > product.stockQuantity) {
+  if (body.quantity > product.stockQuantity && !hasBug('oversell-in-cart')) {
     throw new HttpError(409, `Only ${product.stockQuantity} units available`);
   }
   cart.set(productId, body.quantity);

@@ -3,11 +3,11 @@ import { seedProducts } from '../../database/seed-data';
 import { countProducts, findProductBySku, findUserByEmail } from '../../database/queries';
 
 test.describe('Database smoke @smoke', () => {
-  test('database contains the seeded products', async () => {
+  test('SMK-DB-001: database contains the seeded products', async () => {
     expect(await countProducts()).toBe(seedProducts.length);
   });
 
-  test('seeded product record matches the seed data', async () => {
+  test('SMK-DB-002: seeded product record matches the seed data', async () => {
     const mouse = seedProducts[0]!;
 
     const row = await findProductBySku(mouse.sku);
@@ -21,7 +21,7 @@ test.describe('Database smoke @smoke', () => {
     expect(row!.stock_quantity).toBeLessThanOrEqual(mouse.stockQuantity);
   });
 
-  test('a user registered through the API is stored with a hashed password', async ({ testUser }) => {
+  test('SMK-DB-003: a user registered through the API is stored with a hashed password', async ({ testUser }) => {
     const row = await findUserByEmail(testUser.email);
 
     expect(row, 'user row should exist').toBeDefined();

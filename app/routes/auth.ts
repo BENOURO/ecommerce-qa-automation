@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { query } from '../../database/connection';
+import { hasBug } from '../bugs';
 import { HttpError, bodyOf, isEmail, isNonEmptyString } from '../http';
 import {
   SESSION_COOKIE,
@@ -18,7 +19,8 @@ authRouter.post('/register', async (req, res) => {
   const body = bodyOf(req.body);
   const details: Record<string, string> = {};
   if (!isEmail(body.email)) details.email = 'A valid email is required';
-  if (typeof body.password !== 'string' || body.password.length < 8) {
+  const minPasswordLength = hasBug('weak-password-allowed') ? 1 : 8; // SEEDED DEFECT when the bug is on
+  if (typeof body.password !== 'string' || body.password.length < minPasswordLength) {
     details.password = 'Password must be at least 8 characters';
   }
   if (!isNonEmptyString(body.fullName, 100)) details.fullName = 'Full name is required';
@@ -52,7 +54,14 @@ authRouter.post('/login', async (req, res) => {
   );
   const user = rows[0];
   // Same message for unknown email and wrong password: do not reveal which accounts exist.
-  if (!user) throw new HttpError(401, 'Invalid email or password');
+  if (!user) {
+    if (hasBug('user-enumeration')) {
+      // SEEDED DEFECT: different messages tell an attacker which emails have accounts.
+      const known = await query('SELECT 1 FROM users WHERE email = $1', [body.email.trim().toLowerCase()]);
+      throw new HttpError(401, known.length > 0 ? 'Wrong password' : 'No account found with this email');
+    }
+    throw new HttpError(401, 'Invalid email or password');
+  }
 
   const sessionId = createSession(user);
   res.cookie(SESSION_COOKIE, sessionId, {

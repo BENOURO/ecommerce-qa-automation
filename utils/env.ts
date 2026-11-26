@@ -41,6 +41,8 @@ export const env = {
   sessionTtlSeconds: Number(optional('SESSION_TTL_SECONDS', '1800')),
   // Exposes POST /api/test/expire-session. Must stay false outside of test runs.
   enableTestEndpoints: optional('ENABLE_TEST_ENDPOINTS', 'false') === 'true',
+  // Comma-separated names of seeded defects to switch on (see app/bugs.ts). Empty means a healthy app.
+  bugs: optional('BUGS', ''),
   logRequests: optional('LOG_REQUESTS', 'false') === 'true', // prints one line per HTTP request
   adminEmail: optional('ADMIN_EMAIL', 'admin@example.test'),
   testUser: {

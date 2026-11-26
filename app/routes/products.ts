@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { query } from '../../database/connection';
+import { hasBug } from '../bugs';
 import { HttpError, parseId } from '../http';
 
 export const productsRouter = Router();
@@ -31,14 +32,18 @@ productsRouter.get('/', async (req, res) => {
 
   if (category && !CATEGORIES.includes(category)) throw new HttpError(400, 'Unknown category');
   if (sort && !(sort in SORT_OPTIONS)) throw new HttpError(400, 'Unknown sort option');
-  const orderBy = SORT_OPTIONS[sort ?? ''] ?? 'id ASC';
+  // SEEDED DEFECT when the bug is on: "price low to high" is sorted high to low.
+  const reversed = sort === 'price_asc' && hasBug('sort-price-reversed');
+  const orderBy = SORT_OPTIONS[reversed ? 'price_desc' : (sort ?? '')] ?? 'id ASC';
+  // SEEDED DEFECT when the bug is on: case-sensitive LIKE instead of ILIKE. (Fixed words, never user input.)
+  const likeOperator = hasBug('search-case-sensitive') ? 'LIKE' : 'ILIKE';
 
   // Escape LIKE wildcards so "%" and "_" in the search text are matched literally.
   const pattern = search ? `%${search.replace(/[\\%_]/g, (c) => `\\${c}`)}%` : null;
 
   const products = await query(
     `SELECT ${PRODUCT_COLUMNS} FROM products
-     WHERE ($1::text IS NULL OR name ILIKE $1)
+     WHERE ($1::text IS NULL OR name ${likeOperator} $1)
        AND ($2::text IS NULL OR category = $2)
        AND (NOT $3::boolean OR stock_quantity > 0)
      ORDER BY ${orderBy}`,
